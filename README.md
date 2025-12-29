@@ -1,5 +1,14 @@
 ## 🧠 Asistanım Mobil
 
+![Version](https://img.shields.io/badge/version-2.0-blue.svg)
+
+Bu proje geliştirme sürecindedir...
+
+## 📝 Sürüm Geçmişi
+- v2.0 – Yeni mimari, performans geliştirmeleri, yeni özellikler
+- v1.0 – İlk sürüm
+
+
 Asistanım Mobil, kullanıcıların günlük yaşamlarını kolaylaştırmak, üretkenliklerini artırmak ve ihtiyaç duydukları bilgilere hızlıca ulaşmalarını sağlamak için geliştirilmiş çok amaçlı mobil asistan uygulamasıdır.
 
 ---
@@ -76,6 +85,36 @@ Bu proje şu an geliştirme sürecindedir. Lisans daha sonra belirlenecektir.
 ## 👤 Geliştirici
 
 🛠️ Nexivion Labs
+
+
+---
+
+
+## 🆕 Version 2.0 – Yenilikler
+
+🚀 Genel Değişiklikler
+
+Uygulama mimarisi yeniden yapılandırıldı
+
+Performans iyileştirmeleri yapıldı
+
+Kod yapısı daha modüler hale getirildi
+
+🧠 Yeni Özellikler
+
+✔️ Yeni arayüz / workflow eklendi
+
+✔️ Eklenen fonksiyonlar ve servis yapısı geliştirildi
+
+✔️ Kullanıcı deneyimi artırıldı
+
+🛠️ Teknik Geliştirmeler
+
+-Refactor işlemleri yapıldı
+
+-Daha temiz ve sürdürülebilir kod yapısı
+
+-Versiyonlamaya uygun proje yapısı
 
 
  
