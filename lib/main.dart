@@ -96,7 +96,6 @@ class _AnaSayfaState extends State<AnaSayfa> {
           children: _pages,
         ),
       ),
-      // DÜZELTME: NavigationBar yerine daha kontrollü BottomNavigationBar kullanıldı
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (int index) {
@@ -104,8 +103,6 @@ class _AnaSayfaState extends State<AnaSayfa> {
             _currentIndex = index;
           });
         },
-        // KRİTİK AYAR: 3'ten fazla sekme olduğu için 'fixed' yapmalıyız.
-        // Aksi takdirde ikonlar kaybolabilir veya beyazlaşabilir.
         type: BottomNavigationBarType.fixed, 
         selectedItemColor: Colors.indigo,
         unselectedItemColor: Colors.grey,
@@ -152,30 +149,194 @@ class GorevlerSayfasi extends StatefulWidget {
 
 class Task {
   String id;
-  String text;
-  bool completed;
+  String title;
+  String description;
+  DateTime? date;
+  String priority;   // low - medium - high
   String category;
+  bool completed;
 
-  Task({required this.id, required this.text, this.completed = false, required this.category});
+  Task({
+    required this.id,
+    required this.title,
+    this.description = "",
+    this.date,
+    this.priority = "medium",
+    this.category = "Kişisel",
+    this.completed = false,
+  });
 }
 
 class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
   final List<Task> _tasks = [
-    Task(id: '1', text: 'Flutter Widgetlarını öğren', completed: false, category: 'İş'),
-    Task(id: '2', text: 'Tasarımı incele', completed: true, category: 'Kişisel'),
+    Task(
+      id: '1', 
+      title: 'Flutter Widgetlarını öğren', 
+      completed: false, 
+      category: 'İş',
+      priority: 'high',
+      description: 'StatefulWidget ve StatelessWidget farklarını anla.'
+    ),
+    Task(
+      id: '2', 
+      title: 'Tasarımı incele', 
+      completed: true, 
+      category: 'Kişisel',
+      priority: 'medium',
+    ),
   ];
-  final TextEditingController _controller = TextEditingController();
 
-  void _addTask() {
-    if (_controller.text.isEmpty) return;
-    setState(() {
-      _tasks.add(Task(
-        id: DateTime.now().toString(),
-        text: _controller.text,
-        category: 'Kişisel',
-      ));
-      _controller.clear();
-    });
+  void _showAddTaskDialog() {
+    TextEditingController titleController = TextEditingController();
+    TextEditingController descController = TextEditingController();
+
+    DateTime? selectedDate;
+    TimeOfDay? selectedTime;
+    String selectedPriority = "medium";
+    String selectedCategory = "Kişisel";
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text("Yeni Görev Ekle"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(labelText: "Görev Başlığı"),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: descController,
+                      decoration: const InputDecoration(labelText: "Açıklama"),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(selectedDate == null
+                            ? "Tarih seçilmedi"
+                            : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}"),
+                        TextButton(
+                          onPressed: () async {
+                            DateTime? picked = await showDatePicker(
+                              context: context,
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime(2100),
+                              initialDate: DateTime.now(),
+                            );
+                            if (picked != null) {
+                              setDialogState(() {
+                                selectedDate = picked;
+                              });
+                            }
+                          },
+                          child: const Text("Tarih Seç"),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(selectedTime == null
+                            ? "Saat seçilmedi"
+                            : "${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}"),
+                        TextButton(
+                          onPressed: () async {
+                            TimeOfDay? time = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                            );
+                            if (time != null) {
+                              setDialogState(() {
+                                selectedTime = time;
+                              });
+                            }
+                          },
+                          child: const Text("Saat Seç"),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    DropdownButton<String>(
+                      value: selectedPriority,
+                      isExpanded: true,
+                      items: const [
+                        DropdownMenuItem(value: "low", child: Text("Düşük Öncelik")),
+                        DropdownMenuItem(value: "medium", child: Text("Orta Öncelik")),
+                        DropdownMenuItem(value: "high", child: Text("Yüksek Öncelik")),
+                      ],
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedPriority = value!;
+                        });
+                      },
+                    ),
+                    DropdownButton<String>(
+                      value: selectedCategory,
+                      isExpanded: true,
+                      items: const [
+                        DropdownMenuItem(value: "İş", child: Text("İş")),
+                        DropdownMenuItem(value: "Kişisel", child: Text("Kişisel")),
+                        DropdownMenuItem(value: "Eğitim", child: Text("Eğitim")),
+                        DropdownMenuItem(value: "Sağlık", child: Text("Sağlık")),
+                        DropdownMenuItem(value: "Ev", child: Text("Ev")),
+                      ],
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedCategory = value!;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("İptal"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (titleController.text.isEmpty) return;
+                    DateTime? finalDate = selectedDate;
+                    if (selectedDate != null && selectedTime != null) {
+                      finalDate = DateTime(
+                        selectedDate!.year,
+                        selectedDate!.month,
+                        selectedDate!.day,
+                        selectedTime!.hour,
+                        selectedTime!.minute,
+                      );
+                    }
+                    setState(() {
+                      _tasks.add(
+                        Task(
+                          id: DateTime.now().toString(),
+                          title: titleController.text,
+                          description: descController.text,
+                          date: finalDate,
+                          priority: selectedPriority,
+                          category: selectedCategory,
+                        ),
+                      );
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Kaydet"),
+                ),
+              ],
+            );
+          }
+        );
+      },
+    );
   }
 
   void _toggleTask(int index) {
@@ -199,30 +360,19 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
         children: [
           _buildHeader('Asistanım', 'Bugünün Görevleri'),
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  decoration: InputDecoration(
-                    hintText: 'Yeni görev ekle...',
-                    filled: true,
-                    fillColor: Theme.of(context).cardColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              FloatingActionButton(
-                onPressed: _addTask,
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _showAddTaskDialog,
+              icon: const Icon(Icons.add),
+              label: const Text("Yeni Görev Ekle"),
+              style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
-                mini: true,
-                child: const Icon(Icons.add, color: Colors.white),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 20),
           Expanded(
@@ -242,16 +392,51 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
                       onPressed: () => _toggleTask(index),
                     ),
                     title: Text(
-                      task.text,
+                      task.title,
                       style: TextStyle(
                         decoration: task.completed ? TextDecoration.lineThrough : null,
                         color: task.completed ? Colors.grey : null,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    subtitle: Text(
-                      task.category,
-                      style: TextStyle(color: Colors.indigo[300], fontSize: 12),
+                    // ✅ GÜNCELLENMİŞ KISIM BURASI
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if(task.description.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(task.description, style: const TextStyle(fontSize: 13)),
+                          ),
+
+                        const SizedBox(height: 6), // Biraz boşluk
+
+                        if(task.date != null)
+                          Row(
+                            children: [
+                              const Icon(Icons.calendar_today, size: 12, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Text(
+                                "📅 ${task.date!.day}/${task.date!.month}/${task.date!.year}",
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+
+                        const SizedBox(height: 4),
+                        Text(
+                          "🔥 Öncelik: ${task.priority}",
+                          style: TextStyle(
+                            fontSize: 12, 
+                            color: task.priority == 'high' ? Colors.red : Colors.grey[700]
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 2),
+                        Text("📂 Kategori: ${task.category}", style: const TextStyle(fontSize: 12, color: Colors.indigo)),
+                      ],
                     ),
+                    isThreeLine: true, // Daha fazla alan kaplaması için
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                       onPressed: () => _deleteTask(index),
@@ -462,7 +647,7 @@ class ProfilSayfasi extends StatelessWidget {
   }
 }
 
-// --- 5. AYARLAR SAYFASI (YENİ) ---
+// --- 5. AYARLAR SAYFASI ---
 class AyarlarSayfasi extends StatelessWidget {
   final bool isDarkMode;
   final VoidCallback toggleTheme;
@@ -546,6 +731,3 @@ Widget _buildHeader(String title, String subtitle) {
     ],
   );
 }
-
-
-// bu uygulama eğitim amaçlı oluşturuldu.
