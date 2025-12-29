@@ -151,19 +151,19 @@ class Task {
   String id;
   String title;
   String description;
-  DateTime? date;
-  String priority;   // low - medium - high
+  DateTime date;
+  String priority;
   String category;
-  bool completed;
+  bool isCompleted;
 
   Task({
     required this.id,
     required this.title,
-    this.description = "",
-    this.date,
-    this.priority = "medium",
+    required this.description,
+    required this.date,
+    required this.priority,
     this.category = "Kişisel",
-    this.completed = false,
+    this.isCompleted = false,
   });
 }
 
@@ -172,17 +172,20 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
     Task(
       id: '1', 
       title: 'Flutter Widgetlarını öğren', 
-      completed: false, 
+      isCompleted: false, 
       category: 'İş',
       priority: 'high',
-      description: 'StatefulWidget ve StatelessWidget farklarını anla.'
+      description: 'StatefulWidget ve StatelessWidget farklarını anla.',
+      date: DateTime.now().add(const Duration(hours: 2)),
     ),
     Task(
       id: '2', 
       title: 'Tasarımı incele', 
-      completed: true, 
+      isCompleted: true, 
       category: 'Kişisel',
       priority: 'medium',
+      description: 'Renk paletini kontrol et.',
+      date: DateTime.now().subtract(const Duration(days: 1)),
     ),
   ];
 
@@ -190,8 +193,8 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
     TextEditingController titleController = TextEditingController();
     TextEditingController descController = TextEditingController();
 
-    DateTime? selectedDate;
-    TimeOfDay? selectedTime;
+    DateTime selectedDate = DateTime.now();
+    TimeOfDay selectedTime = TimeOfDay.now();
     String selectedPriority = "medium";
     String selectedCategory = "Kişisel";
 
@@ -220,16 +223,14 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(selectedDate == null
-                            ? "Tarih seçilmedi"
-                            : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}"),
+                        Text("${selectedDate.day}/${selectedDate.month}/${selectedDate.year}"),
                         TextButton(
                           onPressed: () async {
                             DateTime? picked = await showDatePicker(
                               context: context,
                               firstDate: DateTime.now(),
                               lastDate: DateTime(2100),
-                              initialDate: DateTime.now(),
+                              initialDate: selectedDate,
                             );
                             if (picked != null) {
                               setDialogState(() {
@@ -244,14 +245,12 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(selectedTime == null
-                            ? "Saat seçilmedi"
-                            : "${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}"),
+                        Text("${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}"),
                         TextButton(
                           onPressed: () async {
                             TimeOfDay? time = await showTimePicker(
                               context: context,
-                              initialTime: TimeOfDay.now(),
+                              initialTime: selectedTime,
                             );
                             if (time != null) {
                               setDialogState(() {
@@ -305,16 +304,15 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
                 ElevatedButton(
                   onPressed: () {
                     if (titleController.text.isEmpty) return;
-                    DateTime? finalDate = selectedDate;
-                    if (selectedDate != null && selectedTime != null) {
-                      finalDate = DateTime(
-                        selectedDate!.year,
-                        selectedDate!.month,
-                        selectedDate!.day,
-                        selectedTime!.hour,
-                        selectedTime!.minute,
-                      );
-                    }
+                    
+                    DateTime finalDate = DateTime(
+                      selectedDate.year,
+                      selectedDate.month,
+                      selectedDate.day,
+                      selectedTime.hour,
+                      selectedTime.minute,
+                    );
+
                     setState(() {
                       _tasks.add(
                         Task(
@@ -324,6 +322,7 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
                           date: finalDate,
                           priority: selectedPriority,
                           category: selectedCategory,
+                          isCompleted: false,
                         ),
                       );
                     });
@@ -339,9 +338,10 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
     );
   }
 
+  // ignore: unused_element
   void _toggleTask(int index) {
     setState(() {
-      _tasks[index].completed = !_tasks[index].completed;
+      _tasks[index].isCompleted = !_tasks[index].isCompleted;
     });
   }
 
@@ -358,8 +358,35 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader('Asistanım', 'Bugünün Görevleri'),
+          // ✅ BAŞLIK ALANI VE GÜNCELLENMİŞ BUTON
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildHeader('Asistanım', 'Bugünün Görevleri'),
+              
+              // 4️⃣ BUTON BURAYA EKLENDİ
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CompletedTasksPage(tasks: _tasks),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo.shade50,
+                  foregroundColor: Colors.indigo,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+                child: const Text("Tamamlanan Görevler"),
+              ),
+            ],
+          ),
+          
           const SizedBox(height: 20),
+          
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -374,7 +401,9 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
               ),
             ),
           ),
+          
           const SizedBox(height: 20),
+          
           Expanded(
             child: ListView.builder(
               itemCount: _tasks.length,
@@ -384,22 +413,24 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
                   margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: ListTile(
-                    leading: IconButton(
-                      icon: Icon(
-                        task.completed ? Icons.check_circle : Icons.circle_outlined,
-                        color: task.completed ? Colors.green : Colors.grey,
-                      ),
-                      onPressed: () => _toggleTask(index),
+                    leading: Checkbox(
+                      value: task.isCompleted,
+                      activeColor: Colors.indigo,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      onChanged: (value) {
+                        setState(() {
+                          task.isCompleted = value!;
+                        });
+                      },
                     ),
                     title: Text(
                       task.title,
                       style: TextStyle(
-                        decoration: task.completed ? TextDecoration.lineThrough : null,
-                        color: task.completed ? Colors.grey : null,
+                        decoration: task.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                        color: task.isCompleted ? Colors.grey : null,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    // ✅ GÜNCELLENMİŞ KISIM BURASI
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -409,34 +440,36 @@ class _GorevlerSayfasiState extends State<GorevlerSayfasi> {
                             child: Text(task.description, style: const TextStyle(fontSize: 13)),
                           ),
 
-                        const SizedBox(height: 6), // Biraz boşluk
+                        const SizedBox(height: 6),
 
-                        if(task.date != null)
-                          Row(
-                            children: [
+                        Row(
+                          children: [
+                            // ignore: unnecessary_null_comparison
+                            if(task.date != null) ...[ 
                               const Icon(Icons.calendar_today, size: 12, color: Colors.grey),
                               const SizedBox(width: 4),
                               Text(
-                                "📅 ${task.date!.day}/${task.date!.month}/${task.date!.year}",
+                                "📅 ${task.date.day}/${task.date.month}/${task.date.year}",
                                 style: const TextStyle(fontSize: 12, color: Colors.grey),
                               ),
+                              const SizedBox(width: 10),
                             ],
-                          ),
 
-                        const SizedBox(height: 4),
-                        Text(
-                          "🔥 Öncelik: ${task.priority}",
-                          style: TextStyle(
-                            fontSize: 12, 
-                            color: task.priority == 'high' ? Colors.red : Colors.grey[700]
-                          ),
+                            Text(
+                              "🔥 ${task.priority}",
+                              style: TextStyle(
+                                fontSize: 12, 
+                                color: task.priority == 'high' ? Colors.red : Colors.grey[700]
+                              ),
+                            ),
+                            
+                            const SizedBox(width: 10),
+                            Text("📂 ${task.category}", style: const TextStyle(fontSize: 12, color: Colors.indigo)),
+                          ],
                         ),
-                        
-                        const SizedBox(height: 2),
-                        Text("📂 Kategori: ${task.category}", style: const TextStyle(fontSize: 12, color: Colors.indigo)),
                       ],
                     ),
-                    isThreeLine: true, // Daha fazla alan kaplaması için
+                    isThreeLine: true, 
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                       onPressed: () => _deleteTask(index),
@@ -730,4 +763,62 @@ Widget _buildHeader(String title, String subtitle) {
       Text(subtitle, style: const TextStyle(color: Colors.grey)),
     ],
   );
+}
+
+// ✅ YENİ SAYFA: TAMAMLANAN GÖREVLER
+class CompletedTasksPage extends StatelessWidget {
+  final List<Task> tasks; // TaskModel yerine Task kullanıyoruz
+
+  const CompletedTasksPage({super.key, required this.tasks});
+
+  @override
+  Widget build(BuildContext context) {
+    final completed = tasks.where((t) => t.isCompleted).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Tamamlanan Görevler", style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+      ),
+      body: completed.isEmpty
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.assignment_late_outlined, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text("Henüz tamamlanan görev yok 🙂", style: TextStyle(color: Colors.grey, fontSize: 16)),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: completed.length,
+              itemBuilder: (context, index) {
+                final task = completed[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: const Icon(Icons.check_circle, color: Colors.green),
+                    title: Text(
+                      task.title,
+                      style: const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if(task.description.isNotEmpty) Text(task.description),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Tamamlandı - ${task.date.day}/${task.date.month}/${task.date.year}",
+                          style: const TextStyle(fontSize: 12, color: Colors.indigo),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
 }
