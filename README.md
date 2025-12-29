@@ -75,7 +75,7 @@ Bu proje şu an geliştirme sürecindedir. Lisans daha sonra belirlenecektir.
 
 ## 👤 Geliştirici
 
-🛠️ Nexionv Labs
+🛠️ Nexivion Labs
 
 
  
